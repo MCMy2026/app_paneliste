@@ -1,15 +1,46 @@
 import pandas as pd
-import random
+
+def normalize_sexe(df):
+    df["sexe"] = df["sexe"].astype(str).str.lower().str.strip()
+
+    df["sexe"] = df["sexe"].replace({
+        "homme": "H",
+        "masculin": "H",
+        "m": "H",
+        "h": "H",
+        "femme": "F",
+        "feminin": "F",
+        "f": "F"
+    })
+
+    return df
+
+
+def safe_sample(df, n):
+    if len(df) == 0:
+        return pd.DataFrame()
+    return df.sample(min(len(df), n), replace=len(df) < n)
+
 
 def generate_daily(df, commune):
 
+    df = normalize_sexe(df)
+
     df_c = df[df["commune"] == commune]
 
-    hommes = df_c[df_c["sexe"] == "H"].sample(8, replace=True)
-    femmes = df_c[df_c["sexe"] == "F"].sample(7, replace=True)
+    hommes_df = df_c[df_c["sexe"] == "H"]
+    femmes_df = df_c[df_c["sexe"] == "F"]
 
-    df_q = pd.concat([hommes, femmes]).sample(frac=1)
+    hommes = safe_sample(hommes_df, 8)
+    femmes = safe_sample(femmes_df, 7)
 
-    df_q["enquêtrice"] = ["A", "B", "C"] * 5
+    df_q = pd.concat([hommes, femmes])
 
-    return df_q.head(15)
+    # 🔁 Mélange
+    df_q = df_q.sample(frac=1)
+
+    # 👩‍💼 répartition enquêtrices
+    enquetrices = ["A", "B", "C"]
+    df_q["enquêtrice"] = [enquetrices[i % 3] for i in range(len(df_q))]
+
+    return df_q

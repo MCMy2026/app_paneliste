@@ -11,5 +11,7 @@ commune = st.selectbox("Choisir commune", df["commune"].unique())
 if st.button("Générer"):
     planning = generate_daily(df, commune)
     st.dataframe(planning)
-
+if df.empty:
+    st.error("❌ Données vides")
+    st.stop()
     st.write(df.columns)
