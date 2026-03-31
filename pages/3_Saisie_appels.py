@@ -38,6 +38,7 @@ if df.empty:
         "Sexe","Age_group","Niveau_cat"
     ])
 
+st.write("Colonnes disponibles dans le fichier :", df.columns.tolist())
 df["Telephone"] = df["Telephone"].astype(str).apply(clean_phone)
 df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
 
