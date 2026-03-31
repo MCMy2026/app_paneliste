@@ -11,3 +11,5 @@ commune = st.selectbox("Choisir commune", df["commune"].unique())
 if st.button("Générer"):
     planning = generate_daily(df, commune)
     st.dataframe(planning)
+
+    st.write(df.columns)
