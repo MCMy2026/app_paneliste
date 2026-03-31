@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-
 from modules.github_data import read_data, add_row_safe
 from modules.kpi_quotas import compute_quota_kpis
 from modules.recommendation import build_recommendation_message, recommend_panelists
@@ -29,16 +28,31 @@ if st.session_state.reset:
 def clean_phone(phone):
     return str(phone).replace(" ", "").replace("-", "").strip()
 
-# DATA
-df, _ = read_data()
+# ✅ LECTURE DONNÉES (FIX SÉPARATEUR ;)
+# --------------------------------------
+df_raw, _ = read_data()
 
-if df.empty:
+if df_raw.empty:
     df = pd.DataFrame(columns=[
         "Date","Enqueteur","Telephone","Commune","Status",
         "Sexe","Age_group","Niveau_cat"
     ])
+else:
+    # ✅ Correction CRITIQUE : lecture avec sep=";" si une seule colonne détectée
+    if len(df_raw.columns) == 1 and ";" in df_raw.columns[0]:
+        df = pd.read_csv("data/appels_saisis.csv", sep=";", encoding="utf-8")
+    else:
+        df = df_raw.copy()
 
+# ✅ AFFICHAGE DES COLONNES POUR DEBUG
 st.write("Colonnes disponibles dans le fichier :", df.columns.tolist())
+
+# ✅ Sécurisation si colonne Telephone manquante
+if "Telephone" not in df.columns:
+    st.error("❌ La colonne 'Telephone' est introuvable dans le fichier CSV.")
+    st.stop()
+
+# CLEAN
 df["Telephone"] = df["Telephone"].astype(str).apply(clean_phone)
 df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
 
@@ -52,23 +66,19 @@ st.info(build_recommendation_message(kpis))
 # BASE PANEL
 df_pool = pd.read_excel("data/base_appels.xlsx")
 df_pool["Telephone"] = df_pool["Telephone"].astype(str).apply(clean_phone)
-
 communes = sorted(df_pool["Commune"].dropna().unique())
 
 # INPUT
 telephone = st.text_input("Téléphone", key="telephone")
 telephone_clean = clean_phone(telephone)
-
 paneliste = None
 
 # AUTO REMPLISSAGE
 if telephone_clean:
     match = df_pool[df_pool["Telephone"] == telephone_clean]
-
     if not match.empty:
         paneliste = match.iloc[0]
         st.success("✅ Paneliste reconnu")
-
         st.write("👤 Nom :", paneliste.get("Nom", "N/A"))
         st.write("📍 Commune :", paneliste["Commune"])
         st.write("⚧ Sexe :", paneliste["Sexe"])
@@ -87,7 +97,7 @@ else:
 date = st.date_input("Date")
 current_date = pd.to_datetime(date)
 
-# REGLE 2 APPELS
+# RÈGLE 2 APPELS
 df["Year"] = df["Date"].dt.isocalendar().year
 df["Week"] = df["Date"].dt.isocalendar().week
 
@@ -130,13 +140,11 @@ st.info(f"👤 Connecté : {enq}")
 status = st.selectbox("Statut", ["Répondu","Occupé","Absent"])
 
 disable_button = calls_week >= 2
-
 if disable_button:
     st.error("🚨 Limite atteinte : 2 appels/semaine")
 
 # SAVE
 if st.button("Enregistrer", disabled=disable_button):
-
     if not telephone_clean:
         st.error("Numéro obligatoire")
         st.stop()
