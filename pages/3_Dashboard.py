@@ -1,7 +1,21 @@
 import streamlit as st
+from modules.storage import load_calls
 
-st.title("📊 Dashboard")
+st.title("📊 Suivi terrain")
 
-st.metric("Appels réalisés", 120)
-st.metric("Objectif", 210)
-st.progress(120/210)
+df = load_calls()
+
+if not df.empty:
+
+    total = len(df)
+    succes = len(df[df["statut"] == "Succès"])
+
+    st.metric("Total appels", total)
+    st.metric("Succès", succes)
+
+    st.progress(succes / total if total > 0 else 0)
+
+    st.dataframe(df.tail(20))
+
+else:
+    st.warning("Aucune donnée pour le moment")
