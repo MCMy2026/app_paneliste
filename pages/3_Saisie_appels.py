@@ -137,7 +137,7 @@ niveau = st.selectbox("Niveau", ["inferieur","superieur"])
 enq = st.session_state["name"]
 st.info(f"👤 Connecté : {enq}")
 
-status = st.selectbox("Statut", ["Répondu","Occupé","Absent"])
+status = st.selectbox("Statut", ["Repondu","Occupe","Absent"])
 
 disable_button = calls_week >= 2
 if disable_button:
