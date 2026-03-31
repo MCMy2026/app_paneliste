@@ -1,14 +1,12 @@
 import streamlit as st
-from modules.loader import load_data
-from modules.planner import generate_planning
 
-st.title("📞 Application PTPC")
+st.set_page_config(page_title="PTPC App", layout="wide")
 
-if st.button("Générer Planning"):
-    df = load_data()
-    planning = generate_planning(df)
+st.title("📞 PTPC - Suivi des Appels")
 
-    st.success("Planning généré !")
-    st.dataframe(planning)
-
-    planning.to_excel("planning_ptpc.xlsx", index=False)
+st.markdown("""
+### Navigation :
+- 📅 Planning
+- 📋 Saisie Appels
+- 📊 Dashboard
+""")

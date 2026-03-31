@@ -1,38 +1,15 @@
 import pandas as pd
-from datetime import datetime, timedelta
-from modules.quotas import apply_quotas
-from modules.utils import can_call
+import random
 
-def generate_planning(df):
-    planning = []
-    historique = {}
+def generate_daily(df, commune):
 
-    start_date = datetime.today()
+    df_c = df[df["commune"] == commune]
 
-    communes = df["commune"].unique()
+    hommes = df_c[df_c["sexe"] == "H"].sample(8, replace=True)
+    femmes = df_c[df_c["sexe"] == "F"].sample(7, replace=True)
 
-    for day in range(28):
-        current_date = start_date + timedelta(days=day)
+    df_q = pd.concat([hommes, femmes]).sample(frac=1)
 
-        for commune in communes:
-            df_commune = df[df["commune"] == commune]
+    df_q["enquêtrice"] = ["A", "B", "C"] * 5
 
-            selected = apply_quotas(df_commune)
-
-            for i, row in selected.iterrows():
-                id_p = row["id"]
-
-                if can_call(id_p, historique, current_date):
-
-                    enquetrice = ["A", "B", "C"][len(planning) % 3]
-
-                    planning.append({
-                        "date": current_date,
-                        "commune": commune,
-                        "id": id_p,
-                        "enquêtrice": enquetrice
-                    })
-
-                    historique.setdefault(id_p, []).append(current_date)
-
-    return pd.DataFrame(planning)
+    return df_q.head(15)
